@@ -71,7 +71,7 @@ def full_wipe(drive):
             os.remove(wipe_file)
     print(f"Full wipe on {drive} completed.")
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     if platform.system() != "Windows":
         print("This script only works on Windows.")
         sys.exit(0)
