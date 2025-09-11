@@ -37,12 +37,25 @@ def confirm(prompt):
     return ans.strip() == "YES"
 
 def quick_format(drive):
-    """Quick format drive to NTFS"""
+    """Quick format using diskpart"""
     print(f"Formatting drive {drive} ...")
-    run(f"format {drive} /fs:NTFS /q /y")
+
+    dp_script = f"""
+select volume {drive.replace(':', '')}
+format fs=ntfs quick
+exit
+"""
+    script_path = "format_script.txt"
+    with open(script_path, "w") as f:
+        f.write(dp_script)
+
+    run(f"diskpart /s {script_path}")
+
+    if not DRY_RUN and os.path.exists(script_path):
+        os.remove(script_path)
 
 def full_wipe(drive):
-    """Fill free space with zeros to simulate secure erase"""
+    """Fill drive with zeros to simulate secure erase"""
     print(f"Starting full wipe on {drive} ...")
     wipe_file = os.path.join(drive, "wipe.tmp")
     try:
@@ -50,15 +63,15 @@ def full_wipe(drive):
             print(f"Writing {CHUNK_SIZE} bytes to {wipe_file} ...")
             if DRY_RUN:
                 break
-            with open(wipe_file, "wb") as f:
+            with open(wipe_file, "ab") as f:
                 f.write(b'\x00' * CHUNK_SIZE)
     except IOError:
         print(f"Drive {drive} is full. Deleting temporary file...")
-        if not DRY_RUN:
+        if not DRY_RUN and os.path.exists(wipe_file):
             os.remove(wipe_file)
     print(f"Full wipe on {drive} completed.")
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     if platform.system() != "Windows":
         print("This script only works on Windows.")
         sys.exit(0)
