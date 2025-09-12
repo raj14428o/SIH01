@@ -1,20 +1,36 @@
-import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios"; // ✅ import axios
+import { toast } from "react-toastify"; // ✅ if you’re using react-hot-toast
+import { useAuth } from "../../context/AuthContext"; // ✅ import the hook
 
 const Navbar = ({ user }) => {
+  const { logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/users/logout", { 
+      }, {
+        withCredentials: true 
+      });
+
+     logout(); // clear localStorage + context
+    toast.success("Logged out successfully");
+    navigate("/");
+    
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error(error.message);
+    }
   };
 
   const navItems = [
-    { name: 'Home', path: '/dashboard', icon: '🏠' },
-    { name: 'Cleanup History', path: '/history', icon: '📄' },
-    { name: 'Wipe Certificates', path: '/certificates', icon: '🔐' },
+    { name: "Home", path: "/dashboard", icon: "🏠" },
+    { name: "Cleanup History", path: "/history", icon: "📄" },
+    { name: "Wipe Certificates", path: "/certificates", icon: "🔐" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -25,7 +41,12 @@ const Navbar = ({ user }) => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center">
-              <span className="text-2xl font-bold text-blue-600">DataWipe</span>
+              <span
+                className="text-2xl font-bold text-blue-600 cursor-pointer"
+                onClick={() => navigate("/dashboard")}
+              >
+                DataWipe
+              </span>
             </Link>
           </div>
 
@@ -37,8 +58,8 @@ const Navbar = ({ user }) => {
                 to={item.path}
                 className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition duration-200 ${
                   isActive(item.path)
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 }`}
               >
                 <span className="mr-2">{item.icon}</span>
@@ -51,21 +72,20 @@ const Navbar = ({ user }) => {
               <button className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition duration-200">
                 <span className="mr-2">🔧</span>
                 Solutions
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="ml-1 w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                <Link
-                  to="/solutions/windows"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
+                <Link to="/solutions/windows" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Windows
                 </Link>
-                <Link
-                  to="/solutions/linux"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
+                <Link to="/solutions/linux" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Linux
                 </Link>
               </div>
@@ -112,8 +132,8 @@ const Navbar = ({ user }) => {
                   to={item.path}
                   className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
                     isActive(item.path)
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >

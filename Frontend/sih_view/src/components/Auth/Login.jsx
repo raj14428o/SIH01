@@ -1,32 +1,34 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext"; // ✅ use custom hook
+import { toast } from 'react-toastify';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth(); // ✅ directly use context values
 
-  // Mock credentials
-  const mockCredentials = {
-    email: 'admin@datawipe.com',
-    password: 'password123'
-  };
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    if (email === mockCredentials.email && password === mockCredentials.password) {
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify({
-        email: email,
-        name: 'Admin User',
-        isAuthenticated: true
-      }));
-      navigate('/dashboard');
-    } else {
-      setError('Invalid email or password');
+    try {
+      const res = await axios.post("http://localhost:5000/api/users/login", {
+        email,
+        password,
+      });
+
+      login(res.data);
+       // ✅ save globally
+       toast.success("Login successful!");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Login failed. Try again.");
+      
     }
   };
 
@@ -39,8 +41,12 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
+          {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Email Address
             </label>
             <input
@@ -48,14 +54,20 @@ const Login = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 
+                         focus:border-transparent"
               placeholder="Enter your email"
               required
             />
           </div>
 
+          {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Password
             </label>
             <input
@@ -63,31 +75,31 @@ const Login = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 
+                         focus:border-transparent"
               placeholder="Enter your password"
               required
             />
           </div>
 
+          {/* Error */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
               {error}
             </div>
           )}
 
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md 
+                       hover:bg-blue-700 focus:outline-none focus:ring-2 
+                       focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
           >
             Sign In
           </button>
         </form>
-
-        <div className="mt-6 p-4 bg-gray-50 rounded-md">
-          <p className="text-sm text-gray-600 mb-2">Demo Credentials:</p>
-          <p className="text-xs text-gray-500">Email: admin@datawipe.com</p>
-          <p className="text-xs text-gray-500">Password: password123</p>
-        </div>
       </div>
     </div>
   );

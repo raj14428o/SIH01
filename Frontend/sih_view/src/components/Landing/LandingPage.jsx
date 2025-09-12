@@ -1,6 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
+
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -9,7 +12,13 @@ const LandingPage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-blue-600">DataWipe</h1>
+                {/* ✅ Fixed navigation */}
+                <h1
+                  className="text-2xl font-bold text-blue-600 cursor-pointer"
+                  onClick={() => navigate("/")}
+                >
+                  DataWipe
+                </h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -20,7 +29,7 @@ const LandingPage = () => {
                 Sign In
               </Link>
               <Link
-                to="/login"
+                to="/register"
                 className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition duration-200"
               >
                 Get Started
