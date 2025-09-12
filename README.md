@@ -1,120 +1,133 @@
-# DataWipe Frontend - React Application
+# DataWipe - Secure Data Wiping Solution
 
-A professional-grade React application for secure data wiping with compliance certificates. This frontend provides a complete user interface for data wiping operations with mock agent integration.
+A comprehensive secure data wiping solution with multi-platform support for Windows, Linux, and Android. Features professional UI/UX design, hardware-level security, and compliance certificates for enterprise data disposal needs.
 
 ## 🛠️ Technology Stack
 
 - **React 19.1.0** - Modern React with latest features
 - **React Router 7.6.3** - Client-side routing and navigation
-- **Tailwind CSS 4.1.11** - Utility-first CSS framework
+- **Tailwind CSS 4.1.11** - Utility-first CSS framework with modern design
 - **Vite 7.0.0** - Fast build tool and development server
 - **ESLint** - Code quality and linting
+- **Node.js Backend** - Agent integration and API services
 
 ## 📁 Project Structure
 
 ```
-Frontend/
-├── public/
-│   └── vite.svg                    # Vite logo asset
-├── src/
-│   ├── components/
-│   │   ├── About/                  # About page component
-│   │   ├── Auth/                   # Authentication components
-│   │   │   └── Login.jsx           # Login form and authentication logic
-│   │   ├── Certificates/           # Certificate management
-│   │   │   └── Certificates.jsx    # Certificate display and download
-│   │   ├── Contact/                # Contact page component
-│   │   ├── Dashboard/              # Dashboard components
-│   │   │   ├── Dashboard.jsx       # Main dashboard interface
-│   │   │   └── Navbar.jsx          # Navigation bar component
-│   │   ├── Footer/                 # Footer component
-│   │   ├── Header/                 # Header component
-│   │   ├── History/                # Operation history
-│   │   │   └── History.jsx         # Wipe operation history display
-│   │   ├── Home/                   # Home page component
-│   │   ├── Landing/                # Landing page
-│   │   │   └── LandingPage.jsx     # Main landing page with hero section
-│   │   ├── Solutions/              # Data wiping solutions
-│   │   │   ├── WindowsSolution.jsx # Windows data wiping interface
-│   │   │   └── LinuxSolution.jsx   # Linux data wiping interface
-│   │   └── User/                   # User-related components
-│   ├── utils/
-│   │   └── agentIntegration.js     # Agent integration placeholders
-│   ├── assets/                     # Static assets and images
-│   ├── App.css                     # Application-specific styles
-│   ├── App.jsx                     # Main App component
-│   ├── index.css                   # Global styles and Tailwind imports
-│   ├── layout.jsx                  # Layout wrapper component
-│   └── main.jsx                    # Application entry point
-├── .gitignore                      # Git ignore patterns
-├── eslint.config.js                # ESLint configuration
-├── index.html                      # HTML template
-├── package.json                    # Project dependencies and scripts
-├── package-lock.json               # Dependency lock file
-├── vite.config.js                  # Vite configuration
-└── README.md                       # This file
+SIH01/
+├── Agents/
+│   └── agent.py                    # Python agent for data wiping operations
+├── backend/
+│   └── index.js                    # Node.js backend server
+├── Frontend/
+│   ├── public/
+│   │   └── vite.svg                # Vite logo asset
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Auth/               # Authentication components
+│   │   │   │   └── Login.jsx       # Login form and authentication logic
+│   │   │   ├── Certificates/       # Certificate management
+│   │   │   │   └── Certificates.jsx # Certificate display and download
+│   │   │   ├── Dashboard/          # Dashboard components
+│   │   │   │   ├── Dashboard.jsx   # Main dashboard with quick actions
+│   │   │   │   └── Navbar.jsx      # Navigation bar with dropdowns
+│   │   │   ├── History/            # Operation history
+│   │   │   │   └── History.jsx     # Wipe operation history display
+│   │   │   ├── Landing/            # Landing page
+│   │   │   │   └── LandingPage.jsx # Modern landing page with solutions
+│   │   │   ├── Layout/             # Layout components
+│   │   │   │   └── Layout.jsx      # Main layout with footer
+│   │   │   └── Solutions/          # Data wiping solutions
+│   │   │       ├── WindowsSolution.jsx # Windows data wiping interface
+│   │   │       └── LinuxSolution.jsx   # Linux data wiping interface
+│   │   ├── utils/                  # Utility functions
+│   │   ├── assets/                 # Static assets and images
+│   │   ├── App.css                 # Application-specific styles
+│   │   ├── index.css               # Global styles and Tailwind imports
+│   │   └── main.jsx                # Application entry point with routing
+│   ├── .gitignore                  # Git ignore patterns
+│   ├── eslint.config.js            # ESLint configuration
+│   ├── index.html                  # HTML template
+│   ├── package.json                # Project dependencies and scripts
+│   ├── package-lock.json           # Dependency lock file
+│   └── vite.config.js              # Vite configuration
+├── scripts/
+│   ├── linux(ssd).py               # Linux SSD wiping script
+│   └── windows(ssd).py             # Windows SSD wiping script
+├── Doc/
+│   └── README.md                   # Documentation
+└── README.md                       # Main project README
 ```
 
 ## 🚀 Application Features
 
-### 1. Landing Page (`/`)
-- Professional hero section with clean design
-- Trust indicators showing compliance standards (DoD 5220.22-M, NIST SP 800-88)
-- Interactive terminal mockup demonstrating wiping process
-- Feature highlights with military-grade security
-- Call-to-action buttons leading to authentication
+### 1. Modern Landing Page (`/`)
+- **Sticky Navigation**: Glass morphism navbar with gradient branding
+- **Multi-Platform Solutions**: Windows, Linux, and Android cards with official logos
+- **Hardware-Level Security**: hdparm ATA secure erase and NVMe crypto erase
+- **CLI Mock Interface**: Interactive terminal demonstrating wiping commands
+- **Professional Design**: Modern gradients, hover animations, and responsive layout
 
-### 2. Authentication (`/login`)
-- Mock login system with predefined credentials
+### 2. Authentication System (`/login`)
+- Clean login interface with validation
 - Demo credentials: `admin@datawipe.com` / `password123`
 - Session management using localStorage
-- Clean form design with validation and error handling
+- Responsive form design with error handling
 
-### 3. Dashboard (`/dashboard`)
-- Welcome section with user profile information
-- Quick statistics showing total wipes and success rate
-- Navigation hub with access to all major features
-- Responsive design with mobile-friendly layout
+### 3. Enhanced Dashboard (`/dashboard`)
+- **Quick Actions**: Interactive Windows and Linux solution cards with hover effects
+- **User Statistics**: Total wipes, success rate, and system information
+- **Modern Navigation**: Dropdown menus for Solutions and Downloads
+- **Platform Logos**: Official Windows and Linux logos throughout interface
 
-### 4. Data Wiping Solutions
+### 4. Multi-Platform Solutions
 #### Windows Solution (`/solutions/windows`)
-- File/Folder selection with mock file picker
-- Path input field with browse functionality
-- Wipe type selection (File vs Folder)
-- Mock wipe process with loading animation
+- **Tab Navigation**: Data Wipe, Download Agent, Deletion Methods
+- **Agent Download**: Step-by-step installation instructions
+- **File/Folder Selection**: Mock file picker with path validation
+- **Full Disk Wipe**: Direct link to agent download
+- **Windows Logos**: Consistent branding throughout
 
 #### Linux Solution (`/solutions/linux`)
-- Similar functionality with Linux-specific styling
-- Additional options for Linux-specific commands
-- Platform-appropriate file path examples
+- **Linux-Specific Features**: CLI integration, package management
+- **Command Examples**: shred, dd, hdparm, nvme commands
+- **Distribution Support**: Ubuntu, CentOS, RHEL, Debian
+- **Tux Branding**: Linux penguin logos throughout interface
 
-### 5. History & Certificates
+### 5. Agent Integration
+- **Development Notice**: Clear messaging about agent availability
+- **Installation Steps**: "Download the agent", "Give admin permission", "Turn off Firewall"
+- **Platform-Specific Instructions**: Windows and Linux installation guides
+- **Mock Integration**: Placeholder functions for future agent connectivity
+
+### 6. History & Certificates
 #### Cleanup History (`/history`)
-- Tabular display of all wipe operations
-- Columns: Date, Type, Path, Platform, Status
-- Download functionality for PDF and JSON certificates
+- Comprehensive operation tracking
+- Platform-specific filtering (Windows/Linux)
+- Export functionality for compliance
 
 #### Wipe Certificates (`/certificates`)
-- Enhanced certificate table with Certificate ID and Algorithm
-- Summary statistics dashboard
-- Downloadable certificates in both formats
-- Compliance indicators and verification status
+- Compliance certificate generation
+- Audit trail documentation
+- PDF and JSON export formats
 
-## 🎨 Design System
+## 🎨 Modern Design System
 
 ### Color Palette
-- **Primary Blue**: `#2563eb` (blue-600)
-- **Success Green**: `#059669` (green-600)
-- **Warning Yellow**: `#d97706` (yellow-600)
-- **Error Red**: `#dc2626` (red-600)
-- **Gray Scale**: Various shades for text and backgrounds
+- **Primary Blue**: `#2563eb` (Windows theme)
+- **Success Green**: `#059669` (Linux theme)
+- **Orange**: `#ea580c` (Android theme)
+- **Warning Yellow**: `#d97706` (Development notices)
+- **Error Red**: `#dc2626` (Critical actions)
+- **Glass Morphism**: `bg-white/95 backdrop-blur-md`
 
-### Components
-- **Cards**: White background with subtle shadows
-- **Buttons**: Consistent padding, hover states, and focus indicators
-- **Forms**: Clean inputs with proper validation states
-- **Tables**: Responsive design with hover effects
-- **Navigation**: Clear hierarchy with active states
+### Advanced Components
+- **Glass Navigation**: Sticky navbar with backdrop blur
+- **Gradient Cards**: Multi-platform solution cards with hover animations
+- **Interactive Buttons**: Scale transforms and shadow effects
+- **Logo Integration**: Official platform logos (Windows, Linux, Android)
+- **Modern Layout**: Flexbox footer, responsive grids
+- **Smooth Transitions**: 200-300ms duration for all interactions
 
 ## 🔧 Development Setup
 
@@ -152,19 +165,25 @@ npm run preview
 ```
 Preview the production build locally
 
-## 🔮 Mock Data & Integration
+## 🔮 Agent Integration & Mock Data
 
-### Agent Integration Placeholders (`agentIntegration.js`)
-- `startWipeWithAgent()` - Main wipe operation
-- `validatePathWithAgent()` - Path validation
-- `getSystemInfoWithAgent()` - System information
-- `generateCertificateWithAgent()` - Certificate generation
+### Hardware-Level Commands
+- **hdparm**: ATA secure erase for SATA/IDE drives
+- **nvme-cli**: NVMe format with crypto erase
+- **CLI Mock**: Simulation interface for development
+- **Platform Scripts**: Windows and Linux SSD wiping scripts
+
+### Agent Integration Points
+- Python agent (`agent.py`) for actual data wiping
+- Node.js backend (`index.js`) for API services
+- Mock functions for UI demonstration
+- Future integration with real hardware commands
 
 ### Mock Data Structures
-- User sessions stored in localStorage
-- Wipe history with operation details
-- Certificate data with compliance information
-- System statistics for dashboard display
+- User sessions with platform preferences
+- Multi-platform wipe history
+- Certificate generation with compliance data
+- System information for Windows/Linux detection
 
 ## 🚀 Performance Features
 
@@ -182,8 +201,33 @@ Preview the production build locally
 - Color contrast compliance
 - Screen reader friendly
 
-## 📝 Notes
+## 🔧 Technical Features
 
-This is a **prototype/mock version** designed to demonstrate the complete user flow and interface design. All data wiping operations are simulated, and the actual secure deletion functionality will be implemented through agent integration in future versions.
+### Modern UI/UX
+- **Glass Morphism**: Modern translucent navigation
+- **Gradient Branding**: Professional color schemes
+- **Platform Logos**: Official Windows, Linux, Android branding
+- **Responsive Design**: Mobile-first approach
+- **Accessibility**: WCAG compliant interface
 
-The application showcases professional UI/UX design patterns suitable for enterprise security software while maintaining ease of use and accessibility standards.
+### Multi-Platform Support
+- **Windows**: NTFS, FAT32, BitLocker integration
+- **Linux**: ext4, xfs, btrfs, LUKS encryption
+- **Android**: Factory reset enhancement (coming soon)
+
+### Security Standards
+- **Hardware-Level**: hdparm ATA secure erase
+- **NVMe Support**: Crypto erase commands
+- **CLI Integration**: Command-line interface mock
+- **Compliance**: Enterprise security standards
+
+## 📝 Development Status
+
+This is a **comprehensive prototype** showcasing:
+- Complete multi-platform UI/UX design
+- Modern React architecture with routing
+- Agent integration framework
+- Professional branding and design system
+- Enterprise-ready interface patterns
+
+The application demonstrates production-ready design suitable for enterprise security software while providing a foundation for actual agent integration.
