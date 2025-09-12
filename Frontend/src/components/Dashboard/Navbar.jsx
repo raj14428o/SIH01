@@ -24,7 +24,7 @@ const Navbar = ({ user }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center">
+            <Link to="/" className="flex items-center">
               <span className="text-2xl font-bold text-blue-600">DataWipe</span>
             </Link>
           </div>
@@ -58,15 +58,44 @@ const Navbar = ({ user }) => {
               <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                 <Link
                   to="/solutions/windows"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Windows_logo_-_2012.png" alt="Windows" className="w-4 h-4 mr-2" />
                   Windows
                 </Link>
                 <Link
                   to="/solutions/linux"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
+                  <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-4 h-4 mr-2" />
                   Linux
+                </Link>
+              </div>
+            </div>
+
+            {/* Downloads Dropdown */}
+            <div className="relative group">
+              <button className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition duration-200">
+                <span className="mr-2">📥</span>
+                Downloads
+                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <Link
+                  to="/solutions/windows?tab=download"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Windows_logo_-_2012.png" alt="Windows" className="w-4 h-4 mr-2" />
+                  Windows Agent
+                </Link>
+                <Link
+                  to="/solutions/linux?tab=download"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-4 h-4 mr-2" />
+                  Linux Agent
                 </Link>
               </div>
             </div>
@@ -126,7 +155,7 @@ const Navbar = ({ user }) => {
                 className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <span className="mr-2">🪟</span>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Windows_logo_-_2012.png" alt="Windows" className="w-4 h-4 mr-2" />
                 Windows Solution
               </Link>
               <Link
@@ -134,8 +163,24 @@ const Navbar = ({ user }) => {
                 className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <span className="mr-2">🐧</span>
+                <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-4 h-4 mr-2" />
                 Linux Solution
+              </Link>
+              <Link
+                to="/solutions/windows?tab=download"
+                className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Windows_logo_-_2012.png" alt="Windows" className="w-4 h-4 mr-2" />
+                Windows Agent
+              </Link>
+              <Link
+                to="/solutions/linux?tab=download"
+                className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-4 h-4 mr-2" />
+                Linux Agent
               </Link>
               <button
                 onClick={handleLogout}

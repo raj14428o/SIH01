@@ -4,34 +4,49 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-100">
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-blue-600">DataWipe</h1>
+                <Link to="/" className="flex items-center space-x-2">
+                  
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">DataWipe</h1>
+                </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+             
               <Link
                 to="/login"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg text-sm font-medium transition duration-200"
               >
                 Sign In
               </Link>
               <Link
                 to="/login"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition duration-200"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 Get Started
               </Link>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button className="text-gray-600 hover:text-gray-900 p-2 rounded-lg transition duration-200">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative bg-white py-20">
+      <section className="relative bg-white py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Content */}
@@ -72,19 +87,19 @@ const LandingPage = () => {
                   <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  DoD 5220.22-M Compliant
+                  hdparm ATA Secure Erase
                 </div>
                 <div className="flex items-center">
                   <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  NIST SP 800-88 Standard
+                  NVMe Crypto Erase
                 </div>
                 <div className="flex items-center">
                   <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  100% Success Rate
+                  CLI Mock Interface
                 </div>
               </div>
             </div>
@@ -103,12 +118,12 @@ const LandingPage = () => {
                     <div className="ml-4 text-gray-400 text-sm">DataWipe Terminal</div>
                   </div>
                   <div className="text-green-400 font-mono text-sm">
-                    <div className="mb-1">$ datawipe --secure-delete /path/to/sensitive/</div>
-                    <div className="mb-1 text-gray-400">Initializing secure wipe process...</div>
-                    <div className="mb-1 text-blue-400">Using DoD 5220.22-M algorithm</div>
-                    <div className="mb-1 text-yellow-400">Pass 1/3: Writing random data...</div>
-                    <div className="mb-1 text-yellow-400">Pass 2/3: Writing complement...</div>
-                    <div className="mb-1 text-yellow-400">Pass 3/3: Writing random data...</div>
+                    <div className="mb-1">$ hdparm --user-master u --security-set-pass p /dev/nvme0n1</div>
+                    <div className="mb-1 text-gray-400">Initializing NVMe secure erase...</div>
+                    <div className="mb-1 text-blue-400">Using CLI mock interface</div>
+                    <div className="mb-1 text-yellow-400">hdparm: ATA secure erase unit command</div>
+                    <div className="mb-1 text-yellow-400">nvme: NVMe format with crypto erase</div>
+                    <div className="mb-1 text-yellow-400">CLI mock: Simulating hardware erase...</div>
                     <div className="text-green-400">✓ Secure wipe completed successfully</div>
                     <div className="text-blue-400">Certificate: CERT-2025-001</div>
                   </div>
@@ -148,8 +163,126 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Solutions Section */}
+      <section id="solutions" className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Multi-Platform Solutions
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Secure data wiping solutions for all major operating systems with platform-specific optimization
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Windows Solution */}
+            <div className="group bg-white rounded-xl p-8 shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all duration-300 cursor-pointer">
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors duration-300">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Windows_logo_-_2012.png" alt="Windows" className="w-10 h-10" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Windows Solution</h3>
+              <p className="text-gray-600 text-center mb-6">
+                Complete data wiping for Windows 10/11 systems with NTFS support, registry cleaning, and secure file deletion.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  NTFS & FAT32 Support
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Registry Cleaning
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  BitLocker Integration
+                </div>
+              </div>
+              
+            </div>
+            
+            {/* Linux Solution */}
+            <div className="group bg-white rounded-xl p-8 shadow-sm border border-gray-200 hover:shadow-lg hover:border-green-300 transition-all duration-300 cursor-pointer">
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-green-50 rounded-xl flex items-center justify-center group-hover:bg-green-100 transition-colors duration-300">
+                  <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-10 h-10" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Linux Solution</h3>
+              <p className="text-gray-600 text-center mb-6">
+                Advanced data wiping for Linux distributions with ext4, xfs support, and command-line integration.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  ext4, xfs, btrfs Support
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  CLI Integration
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  LUKS Encryption Support
+                </div>
+              </div>
+             
+            </div>
+            
+            {/* Android Solution */}
+            <div className="group bg-white rounded-xl p-8 shadow-sm border border-gray-200 hover:shadow-lg hover:border-orange-300 transition-all duration-300 cursor-pointer">
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-orange-50 rounded-xl flex items-center justify-center group-hover:bg-orange-100 transition-colors duration-300">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/Android_robot.svg" alt="Android" className="w-10 h-10" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">Android Solution</h3>
+              <p className="text-gray-600 text-center mb-6">
+                Mobile data wiping for Android devices with factory reset enhancement and secure storage clearing.
+              </p>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Factory Reset Enhancement
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Secure Storage Clearing
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Root & Non-Root Support
+                </div>
+              </div>
+             
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -168,9 +301,9 @@ const LandingPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.5-2a11 11 0 11-18 0 11 11 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Military-Grade Security</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Hardware-Level Security</h3>
               <p className="text-gray-600">
-                Implements DoD 5220.22-M and NIST SP 800-88 standards for complete data destruction that meets government and enterprise requirements.
+                Utilizes hdparm ATA secure erase and NVMe crypto erase commands with CLI mock interface for complete hardware-level data destruction.
               </p>
             </div>
             
@@ -194,9 +327,9 @@ const LandingPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Cross-Platform Support</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Advanced CLI Integration</h3>
               <p className="text-gray-600">
-                Works seamlessly on both Windows and Linux systems with platform-specific optimization for maximum security and performance.
+                Features hdparm for SATA/IDE drives, nvme-cli for NVMe SSDs, and CLI mock simulation for testing and development environments.
               </p>
             </div>
           </div>
@@ -221,54 +354,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <h3 className="text-2xl font-bold mb-4">DataWipe</h3>
-              <p className="text-gray-400 mb-4">
-                Professional secure data wiping solution for enterprises and organizations worldwide.
-              </p>
-              <div className="flex space-x-4">
-                <div className="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
-                  <span className="text-sm">🔒</span>
-                </div>
-                <div className="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
-                  <span className="text-sm">🛡️</span>
-                </div>
-                <div className="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
-                  <span className="text-sm">📋</span>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition duration-200">Features</a></li>
-                <li><a href="#" className="hover:text-white transition duration-200">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition duration-200">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition duration-200">API</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition duration-200">About</a></li>
-                <li><a href="#" className="hover:text-white transition duration-200">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition duration-200">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition duration-200">Terms</a></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 DataWipe. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

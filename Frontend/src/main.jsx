@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import Layout from './components/Layout/Layout'
 import LandingPage from './components/Landing/LandingPage'
 import Login from './components/Auth/Login'
 import Dashboard from './components/Dashboard/Dashboard'
@@ -13,31 +14,37 @@ import Certificates from './components/Certificates/Certificates'
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <LandingPage />
-  },
-  {
-    path: '/login',
-    element: <Login />
-  },
-  {
-    path: '/dashboard',
-    element: <Dashboard />
-  },
-  {
-    path: '/solutions/windows',
-    element: <WindowsSolution />
-  },
-  {
-    path: '/solutions/linux',
-    element: <LinuxSolution />
-  },
-  {
-    path: '/history',
-    element: <History />
-  },
-  {
-    path: '/certificates',
-    element: <Certificates />
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <LandingPage />
+      },
+      {
+        path: 'login',
+        element: <Login />
+      },
+      {
+        path: 'dashboard',
+        element: <Dashboard />
+      },
+      {
+        path: 'solutions/windows',
+        element: <WindowsSolution />
+      },
+      {
+        path: 'solutions/linux',
+        element: <LinuxSolution />
+      },
+      {
+        path: 'history',
+        element: <History />
+      },
+      {
+        path: 'certificates',
+        element: <Certificates />
+      }
+    ]
   }
 ])
 
