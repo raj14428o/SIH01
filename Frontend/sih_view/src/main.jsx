@@ -1,33 +1,46 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import Layout from './layout.jsx'
-import Home from "./components/Home/Home"
-import About from "./components/About/About"
-import Contact from './components/contact/Contact.jsx'
-const router=createBrowserRouter([
-  {
-    path:'/',
-    element:<Layout/>,
-    children:[
-      {
-        path:"",
-        element:<Home/>
+import LandingPage from './components/Landing/LandingPage'
+import Login from './components/Auth/Login'
+import Dashboard from './components/Dashboard/Dashboard'
+import WindowsSolution from './components/Solutions/WindowsSolution'
+import LinuxSolution from './components/Solutions/LinuxSolution'
+import History from './components/History/History'
+import Certificates from './components/Certificates/Certificates'
 
-      },
-      {
-        path:"about",
-        element:<About/>
-      },
-      {
-        path:"contact",
-        element:<Contact/>
-      }
-    ]
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <LandingPage />
+  },
+  {
+    path: '/login',
+    element: <Login />
+  },
+  {
+    path: '/dashboard',
+    element: <Dashboard />
+  },
+  {
+    path: '/solutions/windows',
+    element: <WindowsSolution />
+  },
+  {
+    path: '/solutions/linux',
+    element: <LinuxSolution />
+  },
+  {
+    path: '/history',
+    element: <History />
+  },
+  {
+    path: '/certificates',
+    element: <Certificates />
   }
 ])
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <RouterProvider router={router}/>
