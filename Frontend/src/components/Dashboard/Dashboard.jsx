@@ -85,34 +85,30 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               onClick={() => navigate('/solutions/windows')}
-              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200 text-left"
+              className="group p-6 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-left bg-gradient-to-br from-white to-blue-50"
             >
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
+                <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors duration-300">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Windows_logo_-_2012.png" alt="Windows" className="w-8 h-8" />
                 </div>
-                <div className="ml-3">
-                  <h3 className="font-medium text-gray-900">Windows Solution</h3>
-                  <p className="text-sm text-gray-600">Wipe files and folders on Windows</p>
+                <div className="ml-4">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-300">Windows Solution</h3>
+                  <p className="text-sm text-gray-600 group-hover:text-blue-600 transition-colors duration-300">Wipe files and folders on Windows</p>
                 </div>
               </div>
             </button>
 
             <button
               onClick={() => navigate('/solutions/linux')}
-              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200 text-left"
+              className="group p-6 border-2 border-green-200 rounded-xl hover:border-green-400 hover:bg-green-50 hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-left bg-gradient-to-br from-white to-green-50"
             >
               <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
+                <div className="p-3 bg-green-100 rounded-xl group-hover:bg-green-200 transition-colors duration-300">
+                  <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-8 h-8" />
                 </div>
-                <div className="ml-3">
-                  <h3 className="font-medium text-gray-900">Linux Solution</h3>
-                  <p className="text-sm text-gray-600">Wipe files and folders on Linux</p>
+                <div className="ml-4">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-300">Linux Solution</h3>
+                  <p className="text-sm text-gray-600 group-hover:text-green-600 transition-colors duration-300">Wipe files and folders on Linux</p>
                 </div>
               </div>
             </button>
