@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>File Deleter</title>
+  </head>
+  <body>
+    <h1>File Deletion Tool 🗑️</h1>
+    <p>Enter the full path of the file or directory you want to delete:</p>
+    <input type="text" id="filePathInput" placeholder="e.g., C:\Users\YourUser\Documents\file.txt" style="width: 400px;">
+    <button id="deleteButton">Delete File</button>
+    <p id="status"></p>
+
+    <script>
+      const deleteButton = document.getElementById('deleteButton');
+      const filePathInput = document.getElementById('filePathInput');
+      const status = document.getElementById('status');
+
+      // When the button is clicked, send the file path to the backend
+      deleteButton.addEventListener('click', () => {
+        const filePath = filePathInput.value;
+        if (filePath) {
+          window.electronAPI.deleteFile(filePath);
+        } else {
+          status.textContent = 'Please enter a file path.';
+          status.style.color = 'red';
+        }
+      });
+
+      // Listen for success or error messages from the backend
+      window.electronAPI.onDeletionSuccess((message) => {
+        status.textContent = message;
+        status.style.color = 'green';
+      });
+
+      window.electronAPI.onDeletionError((errorMessage) => {
+        status.textContent = `Error: ${errorMessage}`;
+        status.style.color = 'red';
+      });
+    </script>
+  </body>
+</html>

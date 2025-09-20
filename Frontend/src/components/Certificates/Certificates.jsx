@@ -56,45 +56,53 @@ const Certificates = () => {
     setCertificates(allCertificates);
   }, []);
 
-  const downloadPDF = (cert) => {
-    alert(`Downloading PDF certificate: ${cert.certificateId}\n\n[Sample PDF Certificate Content]\n\nCertificate ID: ${cert.certificateId}\nWipe Type: ${cert.type}\nPath: ${cert.path}\nAlgorithm: ${cert.algorithm}\nPasses: ${cert.passes}\nVerification: ${cert.verification}\nIssue Date: ${cert.issueDate}`);
-  };
+  // const downloadPDF = (cert) => {
+  //   alert(`Downloading PDF certificate: ${cert.certificateId}\n\n[Sample PDF Certificate Content]\n\nCertificate ID: ${cert.certificateId}\nWipe Type: ${cert.type}\nPath: ${cert.path}\nAlgorithm: ${cert.algorithm}\nPasses: ${cert.passes}\nVerification: ${cert.verification}\nIssue Date: ${cert.issueDate}`);
+  // };
+  const downloadPDF = () => {
+  const link = document.createElement("a");
+  link.href = "https://drive.google.com/uc?export=download&id=12jxRdmgpBzdj1sNd3IjhPKiC31X8ZuJk";
+  link.setAttribute("download", "sample.pdf"); // the name of the file after download
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
-  const downloadJSON = (cert) => {
-    const certificateData = {
-      certificateId: cert.certificateId,
-      wipeDetails: {
-        id: cert.id,
-        date: cert.date,
-        type: cert.type,
-        path: cert.path,
-        platform: cert.platform,
-        status: cert.status
-      },
-      securityDetails: {
-        algorithm: cert.algorithm,
-        passes: cert.passes,
-        verification: cert.verification,
-        compliance: ['DoD 5220.22-M', 'NIST SP 800-88'],
-        timestamp: new Date().toISOString()
-      },
-      issuer: {
-        organization: 'DataWipe Security Solutions',
-        contact: 'certificates@datawipe.com',
-        website: 'https://datawipe.com'
-      }
-    };
+  // const downloadJSON = (cert) => {
+  //   const certificateData = {
+  //     certificateId: cert.certificateId,
+  //     wipeDetails: {
+  //       id: cert.id,
+  //       date: cert.date,
+  //       type: cert.type,
+  //       path: cert.path,
+  //       platform: cert.platform,
+  //       status: cert.status
+  //     },
+  //     securityDetails: {
+  //       algorithm: cert.algorithm,
+  //       passes: cert.passes,
+  //       verification: cert.verification,
+  //       compliance: ['DoD 5220.22-M', 'NIST SP 800-88'],
+  //       timestamp: new Date().toISOString()
+  //     },
+  //     issuer: {
+  //       organization: 'DataWipe Security Solutions',
+  //       contact: 'certificates@datawipe.com',
+  //       website: 'https://datawipe.com'
+  //     }
+  //   };
     
-    const dataStr = JSON.stringify(certificateData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+  //   const dataStr = JSON.stringify(certificateData, null, 2);
+  //   const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const exportFileDefaultName = `certificate_${cert.certificateId}.json`;
+  //   const exportFileDefaultName = `certificate_${cert.certificateId}.json`;
     
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
+  //   const linkElement = document.createElement('a');
+  //   linkElement.setAttribute('href', dataUri);
+  //   linkElement.setAttribute('download', exportFileDefaultName);
+  //   linkElement.click();
+  // };
 
   const getStatusBadge = (status) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
@@ -259,7 +267,7 @@ const Certificates = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
+                        {/* <button
                           onClick={() => downloadPDF(cert)}
                           className="text-blue-600 hover:text-blue-900 font-medium flex items-center"
                         >
@@ -267,7 +275,26 @@ const Certificates = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           Sample PDF
-                        </button>
+                        </button> */}
+                        <button
+      onClick={downloadPDF}
+      className="text-blue-600 hover:text-blue-900 font-medium flex items-center cursor-pointer"
+    >
+      <svg
+        className="w-4 h-4 mr-1"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+      Sample PDF
+    </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button

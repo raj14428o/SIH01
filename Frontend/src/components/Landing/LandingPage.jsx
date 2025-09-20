@@ -32,7 +32,7 @@ const LandingPage = () => {
                 to="/register"
                 className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition duration-200"
               >
-                Get Started
+                Register
               </Link>
             </div>
 
