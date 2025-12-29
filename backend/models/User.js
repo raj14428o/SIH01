@@ -1,7 +1,4 @@
 // --- Secure User Model ---
-// Location: Bhagalpur, Bihar
-// Timestamp: Thursday, 11 September 2025, 8:55 PM IST
-
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
