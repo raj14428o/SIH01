@@ -4,11 +4,12 @@ import subprocess
 import platform
 import ctypes
 
-DRY_RUN = True  # default to safe mode
-CHUNK_SIZE = 1024 * 1024 * 100  # 100MB chunks for full wipe
+CHUNK_SIZE = 1024 * 1024 * 100  # 100MB
+
+# Agent controls destructive mode
+DRY_RUN = os.environ.get("DATAWIPE_ARMED") != "1"
 
 def run(cmd):
-    """Run a shell command (safe in dry-run mode)"""
     print(">>>", cmd)
     if DRY_RUN:
         print("[DRY-RUN] Command not executed")
@@ -19,7 +20,6 @@ def run(cmd):
         sys.exit(1)
 
 def list_drives():
-    """Return a list of available drive letters"""
     drives = []
     bitmask = ctypes.cdll.kernel32.GetLogicalDrives()
     for i in range(26):
@@ -28,20 +28,16 @@ def list_drives():
     return drives
 
 def is_os_drive(drive):
-    """Check if drive is the system drive"""
     return os.environ.get("SystemDrive", "C:").upper() == drive.upper()
 
 def confirm(prompt):
-    """Ask user for yes/no confirmation"""
     ans = input(f"{prompt} (type YES to confirm): ")
     return ans.strip() == "YES"
 
 def quick_format(drive):
-    """Quick format using diskpart"""
     print(f"Formatting drive {drive} ...")
-
     dp_script = f"""
-select volume {drive.replace(':', '')}
+select volume {drive.replace(':','')}
 format fs=ntfs quick
 exit
 """
@@ -55,53 +51,55 @@ exit
         os.remove(script_path)
 
 def full_wipe(drive):
-    """Fill drive with zeros to simulate secure erase"""
     print(f"Starting full wipe on {drive} ...")
     wipe_file = os.path.join(drive, "wipe.tmp")
     try:
         while True:
-            print(f"Writing {CHUNK_SIZE} bytes to {wipe_file} ...")
+            print(f"Writing {CHUNK_SIZE} bytes...")
             if DRY_RUN:
                 break
             with open(wipe_file, "ab") as f:
                 f.write(b'\x00' * CHUNK_SIZE)
     except IOError:
-        print(f"Drive {drive} is full. Deleting temporary file...")
+        print("Drive full, removing temp file")
         if not DRY_RUN and os.path.exists(wipe_file):
             os.remove(wipe_file)
-    print(f"Full wipe on {drive} completed.")
+    print("Full wipe completed")
 
 if __name__ == "__main__":
     if platform.system() != "Windows":
-        print("This script only works on Windows.")
+        print("This script only works on Windows")
         sys.exit(0)
 
-    # Parse arguments
-    DRY_RUN = "--dry-run" in sys.argv[1:]
+    # CLI override ONLY for testing
+    if "--dry-run" in sys.argv[1:]:
+        DRY_RUN = True
+
     full = "--full" in sys.argv[1:]
 
-    print("Available drives:")
     drives = list_drives()
+    print("Available drives:")
     for d in drives:
-        os_mark = "(OS)" if is_os_drive(d) else ""
-        print(f"  {d} {os_mark}")
+        print(" ", d, "(OS)" if is_os_drive(d) else "")
 
-    target = input("Enter drive letter to erase (e.g., D:) : ").upper()
+    target = os.environ.get("DATAWIPE_TARGET")
+    if not target:
+        target = input("Enter drive letter to erase (e.g., D:) : ").upper()
+
     if target not in drives:
-        print("Invalid drive letter!")
+        print("Invalid drive letter")
         sys.exit(1)
 
-    if is_os_drive(target):
-        print("WARNING: You are attempting to erase the OS drive!")
-        if not confirm("Are you absolutely sure?"):
-            print("Aborting.")
-            sys.exit(0)
+    if is_os_drive(target) and os.environ.get("DATAWIPE_ALLOW_OS") != "1":
+        print("OS drive wipe blocked")
+        sys.exit(1)
 
-    print(f"Target drive: {target}")
+    print("Target:", target)
     if DRY_RUN:
-        print("!!! DRY-RUN MODE: No destructive commands will be executed !!!")
+        print("!!! DRY RUN MODE !!!")
 
     if full:
+        quick_format(target)
         full_wipe(target)
     else:
         quick_format(target)
