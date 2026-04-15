@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 
 import userRoutes from './routes/userRoutes.js';
+import agentRoutes from './routes/agentRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -54,6 +55,7 @@ mongoose.connection.on('disconnected', () => {
 
 // --- Routes ---
 app.use('/api/users', userRoutes);
+app.use('/api/agent', agentRoutes);
 
 // Root health check endpoint
 app.get('/', (req, res) => {
