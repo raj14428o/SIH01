@@ -231,3 +231,53 @@ This is a **comprehensive prototype** showcasing:
 - Enterprise-ready interface patterns
 
 The application demonstrates production-ready design suitable for enterprise security software while providing a foundation for actual agent integration.
+
+## 🤖 Website-Controlled Agent (Download + Trigger)
+
+A basic control plane is now available so the website/backend can:
+
+1. Provide an agent download endpoint.
+2. Queue commands for a specific agent ID.
+3. Let agents poll for new commands.
+4. Receive heartbeat and execution status updates.
+
+### Backend endpoints
+
+- `GET /api/agent/download/:platform`
+  - Downloads the Python agent (`windows` or `linux`).
+- `POST /api/agent/commands`
+  - Queue a command for an agent.
+  - Example body:
+    ```json
+    {
+      "agentId": "my-host-01",
+      "action": "PING",
+      "payload": {}
+    }
+    ```
+- `GET /api/agent/commands/next?agentId=my-host-01`
+  - Used by the agent poll loop to fetch the next command.
+- `POST /api/agent/status`
+  - Agent heartbeat and execution status reporting.
+- `GET /api/agent/status`
+  - List current known agent statuses.
+
+### Running the agent
+
+```bash
+cd agent
+DATAWIPE_SERVER_URL=http://localhost:5000 python agent.py
+```
+
+Optional environment variables:
+
+- `DATAWIPE_AGENT_ID` (default: machine hostname)
+- `DATAWIPE_POLL_INTERVAL` (default: `5` seconds)
+
+### Triggering from backend (example)
+
+```bash
+curl -X POST http://localhost:5000/api/agent/commands \
+  -H "Content-Type: application/json" \
+  -d '{"agentId":"my-host-01","action":"PING","payload":{}}'
+```

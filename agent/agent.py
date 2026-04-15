@@ -1,27 +1,93 @@
+import json
+import os
+import socket
 import time
-from dispatcher import handle_command
-# from server import poll_server
+from urllib import error, parse, request
 
-POLL_INTERVAL = 5  # seconds
-def mock_poll_server():
-    """
-    TEMPORARY: simulates a server command
-    """
-    return {
-        "action": "DISK_ERASE",
-        "disk": "E:",   # change to test
-        "method": "FULL"
+from dispatcher import handle_command
+
+SERVER_URL = os.getenv('DATAWIPE_SERVER_URL', 'http://localhost:5000').rstrip('/')
+AGENT_ID = os.getenv('DATAWIPE_AGENT_ID', socket.gethostname())
+POLL_INTERVAL = int(os.getenv('DATAWIPE_POLL_INTERVAL', '5'))
+
+
+def _request_json(method, path, payload=None):
+    url = f"{SERVER_URL}{path}"
+    data = None
+    headers = {
+        'Content-Type': 'application/json',
+        'x-agent-id': AGENT_ID,
     }
 
+    if payload is not None:
+        data = json.dumps(payload).encode('utf-8')
+
+    req = request.Request(url, data=data, method=method, headers=headers)
+
+    with request.urlopen(req, timeout=15) as response:
+        raw = response.read().decode('utf-8')
+        return json.loads(raw) if raw else {}
+
+
+def report_status(status='online', last_command_id=None, details=None):
+    payload = {
+        'agentId': AGENT_ID,
+        'status': status,
+        'lastCommandId': last_command_id,
+        'details': details,
+    }
+    return _request_json('POST', '/api/agent/status', payload=payload)
+
+
+def poll_server_for_command():
+    query = parse.urlencode({'agentId': AGENT_ID})
+    response = _request_json('GET', f'/api/agent/commands/next?{query}')
+    return response.get('command')
+
+
+def execute_command(command):
+    action = command.get('action')
+    if not action:
+        raise RuntimeError('Command is missing action')
+
+    if action == 'PING':
+        print('[Agent] PING received from server')
+        return {'message': 'pong'}
+
+    handle_command(command)
+    return {'message': f'{action} processed'}
+
+
 def main():
-    print("[Agent] DataWipe agent started")
-    cmd =  mock_poll_server()
-    if cmd:
+    print(f'[Agent] DataWipe agent started (id={AGENT_ID})')
+
+    while True:
+        try:
+            report_status(status='online')
+            command = poll_server_for_command()
+
+            if command:
+                command_id = command.get('commandId')
+                print(f"[Agent] Received command: {command}")
+                result = execute_command(command)
+                report_status(status='online', last_command_id=command_id, details=result)
+            else:
+                print('[Agent] No command received')
+
+        except error.HTTPError as http_error:
+            print(f'[Agent] HTTP error: {http_error.code} {http_error.reason}')
+            report_status(status='error', details={'message': str(http_error)})
+        except error.URLError as url_error:
+            print(f'[Agent] Network error: {url_error}')
+        except Exception as exc:
+            print(f'[Agent] Error: {exc}')
             try:
-                handle_command(cmd)
-            except Exception as e:
-                print("[Agent] Error:", e)
-    time.sleep(POLL_INTERVAL)
-    print("[Agent] Command processed. Exiting.")
-if __name__ == "__main__":
+                report_status(status='error', details={'message': str(exc)})
+            except Exception:
+                pass
+
+        time.sleep(POLL_INTERVAL)
+
+
+if __name__ == '__main__':
     main()
