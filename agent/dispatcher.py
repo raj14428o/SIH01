@@ -1,60 +1,149 @@
-# dispatcher.py
-from confirmation import confirm_disk_erase
-from validator import validate_path, validate_disk
+"""Dispatch commands received from the backend into local runner actions."""
+
 import platform
 
-def handle_command(cmd):
-    action = cmd.get("action")
+from confirmation import confirm_disk_erase
+from validator import validate_disk, validate_disk_policy, validate_path
 
-    if action == "FILE_WIPE":
+
+def _command_id(cmd):
+    return cmd.get("commandId") if isinstance(cmd, dict) else None
+
+
+def _result(cmd, action, success=True, message="", details=None):
+    return {
+        "success": success,
+        "commandId": _command_id(cmd),
+        "action": action,
+        "platform": platform.system(),
+        "message": message,
+        "details": details or {},
+    }
+
+
+def _normalize_platform_name(value):
+    normalized = str(value or "").strip().lower()
+    aliases = {
+        "win": "windows",
+        "windows": "windows",
+        "linux": "linux",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _require_matching_platform(cmd):
+    requested = _normalize_platform_name(cmd.get("platform"))
+    if not requested:
+        return
+
+    actual = _normalize_platform_name(platform.system())
+    if requested != actual:
+        raise RuntimeError(
+            f"Platform mismatch: command requires {requested}, but agent is running on {actual}"
+        )
+
+
+def handle_command(cmd):
+    if not isinstance(cmd, dict):
+        raise RuntimeError("Command payload must be a JSON object")
+
+    action = str(cmd.get("action") or "").strip().upper()
+    if not action:
+        raise RuntimeError("Command is missing action")
+
+    _require_matching_platform(cmd)
+
+    if action == "PING":
+        return _result(cmd, action, True, "pong", {"message": "Ping received"})
+
+    if action in {"FILE_WIPE", "FOLDER_WIPE"}:
         path = cmd.get("path")
-        method = cmd.get("method")
+        if not path:
+            raise RuntimeError("path is required for file or folder wipe")
 
         validate_path(path)
 
-        print("[Dispatcher] FILE WIPE")
-        print("Path:", path)
-        print("Method:", method)
-        print("File wipe would execute here (not wired yet)")
+        method = str(cmd.get("method") or "DEFAULT").strip().upper()
+        wipe_type = "folder" if action == "FOLDER_WIPE" else "file"
 
-    elif action == "DISK_ERASE":
+        from runner_files import run_file_wipe, run_folder_wipe
+
+        if wipe_type == "folder":
+            runner_result = run_folder_wipe(path, method=method)
+        else:
+            runner_result = run_file_wipe(path, method=method)
+
+        return _result(
+            cmd,
+            action,
+            True,
+            f"{wipe_type.capitalize()} wipe completed",
+            {
+                "path": path,
+                "method": method,
+                "validated": True,
+                "implemented": True,
+                "runner": runner_result,
+            },
+        )
+
+    if action == "DISK_ERASE":
         disk = cmd.get("disk")
-        method = cmd.get("method")
+        if not disk:
+            raise RuntimeError("disk is required for disk erase")
 
-        validate_disk(disk)
+        disk = validate_disk(disk)
 
-        # LOCAL HUMAN CONFIRMATION (MANDATORY)
-        if not confirm_disk_erase(disk):
-            print("[Agent] Disk erase cancelled locally")
-            return
+        confirmation = cmd.get("confirmation") or cmd.get("confirm")
+        confirmed = confirm_disk_erase(disk, approval=confirmation)
+        if not confirmed:
+            return _result(cmd, action, False, "Disk erase cancelled locally", {"disk": disk})
 
-        print("[Agent] Disk erase CONFIRMED")
-        print("Disk:", disk)
-        print("Method:", method)
-
+        method = str(cmd.get("method") or "FULL").strip().upper()
         system = platform.system()
+        validate_disk_policy(disk, system, method)
 
-        if system == "Linux":
-            print("→ Linux disk erase would run here")
-
-        elif system == "Windows":
+        if system == "Windows":
             if method == "CRYPTO":
                 from runner_crypto_windows import run_windows_crypto_erase
+
                 try:
-                    run_windows_crypto_erase(disk)
-                except RuntimeError as e:
-                    if "BITLOCKER_UNSUPPORTED" in str(e):
-                        print("⚠️ Crypto erase unsupported, falling back to LOGICAL WIPE")
+                    runner_result = run_windows_crypto_erase(disk)
+                except RuntimeError as error:
+                    if "BITLOCKER_UNSUPPORTED" in str(error):
                         from runner_windows import run_windows_disk_erase
-                        run_windows_disk_erase(disk, full=True)
+
+                        runner_result = run_windows_disk_erase(disk, full=True)
+                        runner_result["fallback"] = "logical_wipe"
                     else:
                         raise
             else:
                 from runner_windows import run_windows_disk_erase
-                run_windows_disk_erase(disk, full=(method == "FULL"))
 
+                runner_result = run_windows_disk_erase(disk, full=(method != "QUICK"))
+
+        elif system == "Linux":
+            from runner_linux import run_linux_disk_erase
+
+            runner_result = run_linux_disk_erase(
+                disk,
+                enhanced=(method == "ENHANCED"),
+                crypto=(method == "CRYPTO"),
+            )
         else:
             raise RuntimeError("Unsupported OS")
 
-    else:
-        raise RuntimeError("Unknown action")
+        return _result(
+            cmd,
+            action,
+            True,
+            "Disk erase completed",
+            {
+                "disk": disk,
+                "method": method,
+                "runner": runner_result,
+                "confirmed": True,
+            },
+        )
+
+    raise RuntimeError(f"Unknown action: {action}")

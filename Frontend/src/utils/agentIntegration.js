@@ -1,96 +1,109 @@
-// Future Agent Integration Placeholder
-// This file contains placeholder functions for agent integration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 /**
- * Placeholder function for starting wipe process with agent
- * @param {Object} wipeConfig - Configuration for the wipe operation
- * @param {string} wipeConfig.path - File or folder path to wipe
- * @param {string} wipeConfig.type - Type of wipe ('file' or 'folder')
- * @param {string} wipeConfig.platform - Platform ('Windows' or 'Linux')
- * @param {Object} wipeConfig.options - Additional wipe options
- * @returns {Promise} Promise that resolves when wipe is complete
+ * Download the platform agent from the backend.
+ * @param {string} platform - Platform slug ('windows', 'linux', or 'universal')
+ * @returns {Promise<void>}
  */
-export const startWipeWithAgent = async (wipeConfig) => {
-  console.log('🚧 Agent integration will be added here in future. Currently Mock Process.');
-  console.log('Wipe Configuration:', wipeConfig);
-  
-  // Mock implementation - replace with actual agent integration
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        message: 'Wipe process completed successfully (Mock)',
-        certificateId: `CERT-${Date.now()}`,
-        timestamp: new Date().toISOString()
-      });
-    }, 3000);
-  });
+export const downloadAgentFromServer = async (platform) => {
+  const response = await fetch(`${API_BASE_URL}/api/agent/download/${platform}`);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `Failed to download ${platform} agent`);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const disposition = response.headers.get('content-disposition') || '';
+  const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+  const downloadedFilename = filenameMatch?.[1] || `datawipe-agent-${platform}.zip`;
+
+  link.href = objectUrl;
+  link.download = downloadedFilename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(objectUrl);
 };
 
 /**
- * Placeholder function for validating file paths with agent
- * @param {string} path - Path to validate
- * @param {string} platform - Platform type
- * @returns {Promise<boolean>} Promise that resolves to validation result
+ * Queue a wipe command for the local/shared agent.
+ * @param {Object} command
+ * @param {string} command.action
+ * @param {string} [command.path]
+ * @param {string} [command.disk]
+ * @param {string} command.method
+ * @param {string} command.platform
+ * @returns {Promise<Object>}
  */
-export const validatePathWithAgent = async (path, platform) => {
-  console.log('🚧 Path validation will be implemented with agent integration');
-  
-  // Mock validation - replace with actual agent integration
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true); // Always return true for mock
-    }, 500);
+export const queueWipeCommand = async ({ action, path, disk, method, platform }) => {
+  const payload = {
+    method,
+    platform,
+  };
+
+  if (path) payload.path = path;
+  if (disk) payload.disk = disk;
+
+  const response = await fetch(`${API_BASE_URL}/api/agent/commands`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      agentId: 'default',
+      action,
+      payload,
+    }),
   });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || data.error || 'Failed to queue wipe command');
+  }
+
+  return data;
 };
 
-/**
- * Placeholder function for getting system information via agent
- * @param {string} platform - Platform type
- * @returns {Promise<Object>} Promise that resolves to system info
- */
-export const getSystemInfoWithAgent = async (platform) => {
-  console.log('🚧 System info retrieval will be implemented with agent integration');
-  
-  // Mock system info - replace with actual agent integration
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        platform: platform,
-        availableSpace: '500GB',
-        secureDeleteSupport: true,
-        recommendedAlgorithm: platform === 'Windows' ? 'DoD 5220.22-M' : 'Gutmann Method'
-      });
-    }, 1000);
-  });
+export const fetchCommandStatus = async (commandId) => {
+  const response = await fetch(`${API_BASE_URL}/api/agent/commands/${commandId}/status`);
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || data.error || 'Failed to fetch command status');
+  }
+
+  return data.command;
 };
 
-/**
- * Placeholder function for generating certificates via agent
- * @param {Object} wipeResult - Result from wipe operation
- * @returns {Promise<Object>} Promise that resolves to certificate data
- */
-export const generateCertificateWithAgent = async (wipeResult) => {
-  console.log('🚧 Certificate generation will be implemented with agent integration');
-  
-  // Mock certificate generation - replace with actual agent integration
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        certificateId: wipeResult.certificateId,
-        digitalSignature: 'mock_signature_' + Date.now(),
-        compliance: ['DoD 5220.22-M', 'NIST SP 800-88'],
-        issuer: 'DataWipe Security Solutions',
-        issuedAt: new Date().toISOString()
-      });
-    }, 1000);
-  });
+export const waitForCommandCompletion = async (commandId, options = {}) => {
+  const timeoutMs = options.timeoutMs ?? 180000;
+  const pollIntervalMs = options.pollIntervalMs ?? 1500;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const status = await fetchCommandStatus(commandId);
+    if (status.status === 'success' || status.phase === 'completed') {
+      return status;
+    }
+
+    if (status.status === 'failed' || status.phase === 'failed') {
+      throw new Error(status.details?.message || 'Wipe command failed on agent');
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+  }
+
+  throw new Error('Timed out waiting for wipe completion confirmation');
 };
 
 // Export all functions as a single object for easier importing
 export default {
-  startWipeWithAgent,
-  validatePathWithAgent,
-  getSystemInfoWithAgent,
-  generateCertificateWithAgent
+  downloadAgentFromServer,
+  queueWipeCommand,
+  fetchCommandStatus,
+  waitForCommandCompletion
 };

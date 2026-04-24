@@ -9,51 +9,22 @@ const History = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
-    // Load existing history and add some dummy data if empty
-    const existingHistory = JSON.parse(localStorage.getItem('wipeHistory') || '[]');
-    
-    if (existingHistory.length === 0) {
-      // Add some dummy sample data
-      const dummyHistory = [
-        {
-          id: 1,
-          date: '2025-09-11',
-          type: 'File Wipe',
-          path: 'C:\\Users\\Documents\\confidential.pdf',
-          status: 'Success',
-          platform: 'Windows'
-        },
-        {
-          id: 2,
-          date: '2025-09-10',
-          type: 'Folder Wipe',
-          path: '/home/user/sensitive_data/',
-          status: 'Success',
-          platform: 'Linux'
-        },
-        {
-          id: 3,
-          date: '2025-09-09',
-          type: 'File Wipe',
-          path: 'C:\\Temp\\old_records.xlsx',
-          status: 'Success',
-          platform: 'Windows'
-        }
-      ];
-      localStorage.setItem('wipeHistory', JSON.stringify(dummyHistory));
-      setWipeHistory(dummyHistory);
-    } else {
-      setWipeHistory(existingHistory);
-    }
+    const loadHistory = () => {
+      const existingHistory = JSON.parse(localStorage.getItem('wipeHistory') || '[]');
+      const sorted = [...existingHistory].sort((a, b) => {
+        const aTime = new Date(a.completedAt || a.date || 0).getTime();
+        const bTime = new Date(b.completedAt || b.date || 0).getTime();
+        return bTime - aTime;
+      });
+      setWipeHistory(sorted);
+    };
+
+    loadHistory();
+    const intervalId = setInterval(loadHistory, 2000);
+    return () => clearInterval(intervalId);
   }, []);
 
-  const downloadPDF = (record) => {
-    // Mock PDF download
-    alert(`Downloading PDF certificate for ${record.type} on ${record.date}\n\n[Sample PDF content would be generated here]`);
-  };
-
   const downloadJSON = (record) => {
-    // Mock JSON download
     const jsonData = {
       wipeId: record.id,
       date: record.date,
@@ -61,12 +32,11 @@ const History = () => {
       path: record.path,
       status: record.status,
       platform: record.platform,
-      timestamp: new Date().toISOString(),
-      certificate: {
-        algorithm: 'DoD 5220.22-M',
-        passes: 3,
-        verification: 'Complete'
-      }
+      commandId: record.commandId || null,
+      algorithm: record.algorithm || null,
+      completedAt: record.completedAt || null,
+      error: record.error || null,
+      exportedAt: new Date().toISOString(),
     };
     
     const dataStr = JSON.stringify(jsonData, null, 2);
@@ -110,7 +80,7 @@ const History = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Cleanup History</h1>
-                <p className="text-gray-600">View and download certificates for completed wipe operations</p>
+                <p className="text-gray-600">Execution history for real local wipe commands</p>
               </div>
               <button
                 onClick={() => navigate('/dashboard')}
@@ -141,17 +111,20 @@ const History = () => {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Download PDF
+                    Algorithm
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Download JSON
+                    Command ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Export JSON
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {wipeHistory.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
                       No wipe operations found. Start a wipe operation to see history here.
                     </td>
                   </tr>
@@ -183,16 +156,11 @@ const History = () => {
                           {record.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => downloadPDF(record)}
-                          className="text-blue-600 hover:text-blue-900 font-medium flex items-center"
-                        >
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          Sample PDF
-                        </button>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {(record.algorithm || 'default').toUpperCase()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {record.commandId || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
@@ -202,7 +170,7 @@ const History = () => {
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
-                          Sample JSON
+                          JSON
                         </button>
                       </td>
                     </tr>

@@ -40,22 +40,30 @@ def report_status(status='online', last_command_id=None, details=None):
 
 
 def poll_server_for_command():
-    query = parse.urlencode({'agentId': AGENT_ID})
-    response = _request_json('GET', f'/api/agent/commands/next?{query}')
-    return response.get('command')
+    for queue_id in (AGENT_ID, 'default'):
+        query = parse.urlencode({'agentId': queue_id})
+        response = _request_json('GET', f'/api/agent/commands/next?{query}')
+        command = response.get('command')
+        if command:
+            return command
+
+    return None
 
 
 def execute_command(command):
-    action = command.get('action')
-    if not action:
-        raise RuntimeError('Command is missing action')
+    result = handle_command(command)
+    action = result.get('action', 'UNKNOWN')
 
-    if action == 'PING':
-        print('[Agent] PING received from server')
-        return {'message': 'pong'}
+    if result.get('success'):
+        print(f"[Agent] {action} completed successfully")
+    else:
+        print(f"[Agent] {action} finished with a non-success result")
 
-    handle_command(command)
-    return {'message': f'{action} processed'}
+    return result
+
+
+def report_command_state(command_id, status, details):
+    return report_status(status=status, last_command_id=command_id, details=details)
 
 
 def main():
@@ -69,8 +77,35 @@ def main():
             if command:
                 command_id = command.get('commandId')
                 print(f"[Agent] Received command: {command}")
-                result = execute_command(command)
-                report_status(status='online', last_command_id=command_id, details=result)
+                report_command_state(
+                    command_id,
+                    'busy',
+                    {
+                        'phase': 'received',
+                        'action': command.get('action'),
+                    },
+                )
+                try:
+                    result = execute_command(command)
+                    report_command_state(
+                        command_id,
+                        'online',
+                        {
+                            'phase': 'completed',
+                            'result': result,
+                        },
+                    )
+                except Exception as command_error:
+                    print(f"[Agent] Command {command_id} failed: {command_error}")
+                    report_command_state(
+                        command_id,
+                        'error',
+                        {
+                            'phase': 'failed',
+                            'action': command.get('action'),
+                            'message': str(command_error),
+                        },
+                    )
             else:
                 print('[Agent] No command received')
 

@@ -14,7 +14,6 @@ import Dashboard from "./components/Dashboard/Dashboard";
 import WindowsSolution from "./components/Solutions/WindowsSolution";
 import LinuxSolution from "./components/Solutions/LinuxSolution";
 import History from "./components/History/History";
-import Certificates from "./components/Certificates/Certificates";
 import { AuthProvider } from "./context/AuthContext"; // ✅ Auth Context Provider
 
 // ✅ Router setup
@@ -30,7 +29,6 @@ const router = createBrowserRouter([
       { path: "solutions/windows", element: <WindowsSolution /> },
       { path: "solutions/linux", element: <LinuxSolution /> },
       { path: "history", element: <History /> },
-      { path: "certificates", element: <Certificates /> },
     ],
   },
 ]);

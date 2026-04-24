@@ -4,16 +4,45 @@ import Navbar from './Navbar';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    successful: 0,
+    failed: 0,
+  });
   const navigate = useNavigate();
+
+  const computeStats = () => {
+    const history = JSON.parse(localStorage.getItem('wipeHistory') || '[]');
+    const successful = history.filter((item) => item.status === 'Success').length;
+    const failed = history.filter((item) => item.status === 'Failed').length;
+
+    setStats({
+      total: history.length,
+      successful,
+      failed,
+    });
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
       setUser(JSON.parse(userData));
+      computeStats();
     } else {
       navigate('/');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const onStorageChange = (event) => {
+      if (!event.key || event.key === 'wipeHistory') {
+        computeStats();
+      }
+    };
+
+    window.addEventListener('storage', onStorageChange);
+    return () => window.removeEventListener('storage', onStorageChange);
+  }, []);
 
   if (!user) {
     return <div>Loading...</div>;
@@ -34,7 +63,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Quick Stats */}
+        {/* Real Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center">
@@ -44,8 +73,8 @@ const Dashboard = () => {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Wipes</p>
-                <p className="text-2xl font-bold text-gray-900">12</p>
+                <p className="text-sm font-medium text-gray-600">Total Operations</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
             </div>
           </div>
@@ -58,22 +87,22 @@ const Dashboard = () => {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Success Rate</p>
-                <p className="text-2xl font-bold text-gray-900">100%</p>
+                <p className="text-sm font-medium text-gray-600">Successful</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.successful}</p>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+              <div className="p-3 rounded-full bg-red-100 text-red-600">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Data Secured</p>
-                <p className="text-2xl font-bold text-gray-900">2.4TB</p>
+                <p className="text-sm font-medium text-gray-600">Failed</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.failed}</p>
               </div>
             </div>
           </div>

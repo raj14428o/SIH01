@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../Dashboard/Navbar';
+import { downloadAgentFromServer, queueWipeCommand, waitForCommandCompletion } from '../../utils/agentIntegration';
+import { toast } from 'react-toastify';
 
 const LinuxSolution = () => {
   const [selectedPath, setSelectedPath] = useState('');
@@ -8,6 +10,7 @@ const LinuxSolution = () => {
   const [selectedMethod, setSelectedMethod] = useState('dod-7pass');
   const [isWiping, setIsWiping] = useState(false);
   const [wipeComplete, setWipeComplete] = useState(false);
+  const [wipeMessage, setWipeMessage] = useState('');
   const [activeTab, setActiveTab] = useState('wipe');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -21,60 +24,177 @@ const LinuxSolution = () => {
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  const deletionMethods = [
-    { id: 'dod-7pass', name: 'DoD 5220.22-M (7-pass)', passes: 7, security: 'High', description: 'Department of Defense standard with 7 overwrite passes' },
-    { id: 'dod-3pass', name: 'DoD Short (3-pass)', passes: 3, security: 'Medium', description: 'Shortened DoD standard with 3 overwrite passes' },
-    { id: 'hmg-is4', name: 'HMG IS4', passes: 1, security: 'Medium', description: 'UK Government standard for secure data deletion' },
-    { id: 'prng', name: 'PRNG Stream', passes: 1, security: 'Low', description: 'Pseudorandom number generator overwrite' },
-    { id: 'verify', name: 'Verify Zeros/Ones', passes: 2, security: 'Low', description: 'Simple zero and one pattern verification' }
-  ];
-
-  const handleDownloadAgent = () => {
-    alert('Download Linux Agent initiated (Demo only - no actual file)');
+  const isAbsolutePath = (value) => {
+    if (!value) return false;
+    if (/^[a-zA-Z]:\\/.test(value)) return true;
+    if (value.startsWith('\\\\')) return true;
+    if (value.startsWith('/')) return true;
+    return false;
   };
 
-  const handleDownloadISO = () => {
-    alert('Download Bootable ISO initiated (Demo only - no actual file)');
+  const deletionMethods = [
+    { id: 'default', name: 'Default Eraser', passes: 3, security: 'Medium', description: 'Default secure overwrite routine from local scripts' },
+    { id: 'dod-7pass', name: 'DoD 5220.22-M (7-pass)', passes: 7, security: 'High', description: 'Department of Defense standard with 7 overwrite passes' },
+    { id: 'dod-3pass', name: 'DoD Short (3-pass)', passes: 3, security: 'Medium', description: 'Shortened DoD standard with 3 overwrite passes' },
+    { id: 'hmg-is5-enhanced', name: 'HMG IS5 Enhanced', passes: 3, security: 'High', description: 'HMG IS5 enhanced overwrite sequence from local scripts' },
+    { id: 'prng-stream', name: 'PRNG Stream', passes: 1, security: 'Low', description: 'Single-pass pseudorandom overwrite' }
+  ];
+
+  const diskMethods = [
+    { id: 'standard', name: 'Standard Secure Erase', passes: 1, security: 'Medium', description: 'Standard secure erase routine for supported devices' },
+    { id: 'enhanced', name: 'Enhanced Secure Erase', passes: 1, security: 'High', description: 'Enhanced secure erase mode for stronger cleanup' },
+    { id: 'crypto', name: 'Crypto Erase', passes: 1, security: 'High', description: 'Cryptographic erase for supported NVMe/SATA devices' },
+  ];
+
+  const methodsForSelection = wipeType === 'disk' ? diskMethods : deletionMethods;
+
+  useEffect(() => {
+    if (wipeType === 'disk') {
+      if (!diskMethods.some((method) => method.id === selectedMethod)) {
+        setSelectedMethod('standard');
+      }
+      return;
+    }
+
+    if (!deletionMethods.some((method) => method.id === selectedMethod)) {
+      setSelectedMethod('dod-7pass');
+    }
+  }, [wipeType, selectedMethod]);
+
+  const isValidLinuxDisk = (value) => /^\/dev\/.+/.test((value || '').trim());
+
+  const handleDownloadAgent = async () => {
+    try {
+      await downloadAgentFromServer('universal');
+      toast.success('Universal agent bundle downloaded successfully.');
+    } catch (error) {
+      console.error('Linux agent download failed:', error);
+      toast.error('Linux agent download failed. Please try again.');
+    }
   };
 
   const handleFileSelect = () => {
-    // Mock file picker
-    const mockPath = wipeType === 'file' 
-      ? '/home/user/documents/sensitive_data.txt'
-      : '/home/user/documents/SensitiveFolder';
-    setSelectedPath(mockPath);
+    const picker = document.createElement('input');
+    picker.type = 'file';
+
+    if (wipeType === 'folder') {
+      picker.setAttribute('webkitdirectory', '');
+      picker.setAttribute('directory', '');
+    }
+
+    picker.onchange = (event) => {
+      const input = event.target;
+      const selectedFile = input?.files?.[0];
+
+      if (!selectedFile) {
+        return;
+      }
+
+      const runtimePath = typeof selectedFile.path === 'string' ? selectedFile.path : '';
+      const rawValue = input.value || '';
+
+      // Browsers often hide absolute paths (for example C:\fakepath\...) for security reasons.
+      const safePath = runtimePath || (rawValue.includes('fakepath') ? '' : rawValue);
+
+      if (safePath) {
+        setSelectedPath(safePath);
+        return;
+      }
+
+      if (wipeType === 'folder' && selectedFile.webkitRelativePath) {
+        const folderName = selectedFile.webkitRelativePath.split('/')[0] || selectedFile.name;
+        setSelectedPath(folderName);
+      } else {
+        setSelectedPath(selectedFile.name || '');
+      }
+
+      toast.warning('Browser privacy may hide absolute paths. If wipe fails, replace this with the full local path manually.');
+    };
+
+    picker.click();
   };
 
-  const startWipe = () => {
+  const updateHistoryRecord = (commandId, updates) => {
+    const history = JSON.parse(localStorage.getItem('wipeHistory') || '[]');
+    const next = history.map((item) => (item.commandId === commandId ? { ...item, ...updates } : item));
+    localStorage.setItem('wipeHistory', JSON.stringify(next));
+  };
+
+  const startWipe = async () => {
     if (!selectedPath) {
-      alert('Please select a file or folder path first.');
+      toast.error(wipeType === 'disk' ? 'Please enter a target device (example: /dev/sdb).' : 'Please select a file or folder path first.');
+      return;
+    }
+
+    if (wipeType === 'disk' && !isValidLinuxDisk(selectedPath)) {
+      toast.error('Please enter a valid Linux device path (example: /dev/sdb or /dev/nvme0n1).');
+      return;
+    }
+
+    if (wipeType !== 'disk' && !isAbsolutePath(selectedPath)) {
+      toast.error('Please enter a full absolute path (example: /home/raj/test.txt).');
       return;
     }
 
     setIsWiping(true);
     setWipeComplete(false);
+    setWipeMessage('');
 
-    // Mock wipe process
-    setTimeout(() => {
-      setIsWiping(false);
-      setWipeComplete(true);
+    try {
+      const action = wipeType === 'folder' ? 'FOLDER_WIPE' : wipeType === 'disk' ? 'DISK_ERASE' : 'FILE_WIPE';
+      const normalizedTarget = selectedPath.trim();
+      const response = await queueWipeCommand({
+        action,
+        path: wipeType === 'disk' ? undefined : normalizedTarget,
+        disk: wipeType === 'disk' ? normalizedTarget : undefined,
+        method: selectedMethod,
+        platform: 'Linux',
+      });
+      const commandId = response?.command?.commandId || null;
       
       // Save wipe record to localStorage for history
       const existingHistory = JSON.parse(localStorage.getItem('wipeHistory') || '[]');
       const newRecord = {
         id: Date.now(),
         date: new Date().toISOString().split('T')[0],
-        type: wipeType === 'file' ? 'File Wipe' : 'Folder Wipe',
-        path: selectedPath,
-        status: 'Success',
+        type: wipeType === 'file' ? 'File Wipe' : wipeType === 'folder' ? 'Folder Wipe' : 'Disk/Drive Cleanup',
+        path: normalizedTarget,
+        status: 'Queued',
+        commandId,
+        algorithm: selectedMethod,
         platform: 'Linux'
       };
       existingHistory.push(newRecord);
       localStorage.setItem('wipeHistory', JSON.stringify(existingHistory));
 
-      // Future agent integration placeholder
-      console.log('🚧 Agent integration will be added here in future. Currently Mock Process.');
-    }, 3000);
+      if (!commandId) {
+        throw new Error('Command queued but no commandId returned from server.');
+      }
+
+      const finalStatus = await waitForCommandCompletion(commandId);
+      updateHistoryRecord(commandId, {
+        status: 'Success',
+        completedAt: new Date().toISOString(),
+      });
+
+      setWipeMessage(finalStatus.details?.result?.message || 'Deletion completed successfully.');
+      setWipeComplete(true);
+      setIsWiping(false);
+    } catch (error) {
+      console.error('Wipe command failed:', error);
+      const history = JSON.parse(localStorage.getItem('wipeHistory') || '[]');
+      if (history.length > 0) {
+        const last = history[history.length - 1];
+        if (last.status === 'Queued') {
+          updateHistoryRecord(last.commandId, {
+            status: 'Failed',
+            error: error.message || 'Unknown error',
+          });
+        }
+      }
+      setIsWiping(false);
+      toast.error(error.message || 'Failed to queue wipe command');
+    }
   };
 
   return (
@@ -108,7 +228,7 @@ const LinuxSolution = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                🔧 Data Wipe
+                Data Wipe
               </button>
               <button
                 onClick={() => setActiveTab('download')}
@@ -118,7 +238,7 @@ const LinuxSolution = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                📥 Download Agent
+                Download Agent
               </button>
               <button
                 onClick={() => setActiveTab('methods')}
@@ -128,7 +248,7 @@ const LinuxSolution = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                🔒 Deletion Methods
+                Deletion Methods
               </button>
             </nav>
           </div>
@@ -145,7 +265,7 @@ const LinuxSolution = () => {
                 Select Deletion Method
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {deletionMethods.map((method) => (
+                {methodsForSelection.map((method) => (
                   <button
                     key={method.id}
                     onClick={() => setSelectedMethod(method.id)}
@@ -212,71 +332,49 @@ const LinuxSolution = () => {
                     </div>
                   </div>
                 </button>
+
+                <button
+                  onClick={() => setWipeType('disk')}
+                  className={`p-4 border-2 rounded-lg transition duration-200 ${
+                    wipeType === 'disk'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V7M4 7h16M8 11h8m-8 4h6" />
+                    </svg>
+                    <div className="text-left">
+                      <h3 className="font-medium">Disk/Drive Cleanup</h3>
+                      <p className="text-sm text-gray-600">Clean up a full Linux block device</p>
+                    </div>
+                  </div>
+                </button>
               </div>
             </div>
 
             {/* Path Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {wipeType === 'file' ? 'Select File Path' : 'Select Folder Path'}
+                {wipeType === 'file' ? 'Select File Path' : wipeType === 'folder' ? 'Select Folder Path' : 'Target Device'}
               </label>
               <div className="flex space-x-3">
                 <input
                   type="text"
                   value={selectedPath}
                   onChange={(e) => setSelectedPath(e.target.value)}
-                  placeholder={wipeType === 'file' ? '/path/to/file.txt' : '/path/to/folder'}
+                  placeholder={wipeType === 'file' ? '/path/to/file.txt' : wipeType === 'folder' ? '/path/to/folder' : '/dev/sdb'}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
-                <button
-                  onClick={handleFileSelect}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-200"
-                >
-                  Browse
-                </button>
-              </div>
-            </div>
-
-            {/* Linux-specific Options */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-3">Linux Wipe Options</h3>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-green-600 focus:ring-green-500" defaultChecked />
-                  <span className="ml-2 text-sm text-gray-700">Use shred command (3-pass overwrite)</span>
-                </label>
-                <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-green-600 focus:ring-green-500" />
-                  <span className="ml-2 text-sm text-gray-700">Secure deletion with dd command</span>
-                </label>
-                <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-green-600 focus:ring-green-500" />
-                  <span className="ml-2 text-sm text-gray-700">Remove file system entries</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Full Disk Wipe Option */}
-            <div className="border-t pt-6">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7M4 7c0-2.21 1.79-4 4-4h8c2.21 0 4 1.79 4 4M4 7h16M10 11v6M14 11v6" />
-                    </svg>
-                    <div>
-                      <h3 className="font-medium text-green-800">Full Disk Wipe</h3>
-                      <p className="text-sm text-green-700">For complete disk wiping, download and install the DataWipe agent</p>
-                    </div>
-                  </div>
+                {wipeType !== 'disk' && (
                   <button
-                    onClick={() => setActiveTab('download')}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center text-sm"
+                    onClick={handleFileSelect}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-200"
                   >
-                    <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-4 h-4 mr-2" />
-                    Download Agent
+                    Browse
                   </button>
-                </div>
+                )}
               </div>
             </div>
 
@@ -320,9 +418,9 @@ const LinuxSolution = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div>
-                    <h3 className="font-medium text-green-800">Wipe Process Completed Successfully!</h3>
+                    <h3 className="font-medium text-green-800">Deletion Completed Successfully</h3>
                     <p className="text-sm text-green-700">
-                      ✅ Wipe process started (Mock). Agent integration will be implemented here later.
+                      {wipeMessage || 'The local agent confirmed completion.'}
                     </p>
                     <p className="text-sm text-green-700 mt-1">
                       Path: {selectedPath}
@@ -339,23 +437,21 @@ const LinuxSolution = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Side - Instructions */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center">
-              <span className="mr-2">📋</span>
-              Linux Agent Installation
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+              How To Run Local Wipe
             </h2>
             
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Installation Steps</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Setup Steps (Hosted Website)</h3>
                 <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                  <li>Download the Linux agent package (.deb/.rpm)</li>
-                  <li>Open terminal with sudo privileges</li>
-                  <li>Install using: <code className="bg-gray-100 px-1 rounded">sudo dpkg -i datawipe-agent.deb</code></li>
-                  <li>Or for RPM: <code className="bg-gray-100 px-1 rounded">sudo rpm -i datawipe-agent.rpm</code></li>
-                  <li>Give executable permissions: <code className="bg-gray-100 px-1 rounded">sudo chmod +x /usr/bin/datawipe</code></li>
-                  <li>Disable firewall temporarily if needed</li>
-                  <li>Run initial setup: <code className="bg-gray-100 px-1 rounded">sudo datawipe --setup</code></li>
-                  <li>Re-enable firewall after installation</li>
+                  <li>Download the universal agent zip from this page and extract it.</li>
+                  <li>Open terminal in the extracted <code className="bg-gray-100 px-1 rounded">agent</code> folder.</li>
+                  <li>Set the hosted API URL: <code className="bg-gray-100 px-1 rounded">export DATAWIPE_SERVER_URL=https://your-domain.com</code>.</li>
+                  <li>Optional: set a fixed agent id: <code className="bg-gray-100 px-1 rounded">export DATAWIPE_AGENT_ID=office-linux-01</code>.</li>
+                  <li>Run agent: <code className="bg-gray-100 px-1 rounded">python3 agent.py</code>.</li>
+                  <li>Open the hosted website, go to Linux Solution, and provide absolute path or device id.</li>
+                  <li>Choose method, click Start Wipe, and wait for Success/Failed confirmation in history.</li>
                 </ol>
               </div>
 
@@ -371,12 +467,13 @@ const LinuxSolution = () => {
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Linux-Specific Commands</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Deletion Flow Checklist</h3>
                 <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
-                  <li><code className="bg-gray-100 px-1 rounded">shred -vfz -n 3 filename</code> - Secure file deletion</li>
-                  <li><code className="bg-gray-100 px-1 rounded">dd if=/dev/urandom of=/dev/sdX</code> - Full disk wipe</li>
-                  <li><code className="bg-gray-100 px-1 rounded">wipe -rf directory/</code> - Recursive directory wipe</li>
-                  <li><code className="bg-gray-100 px-1 rounded">hdparm --user-master u --security-set-pass p /dev/sdX</code> - ATA secure erase</li>
+                  <li>Agent must be online on the same machine where data exists.</li>
+                  <li>Use absolute local path (or /dev device for disk erase).</li>
+                  <li>Disk erase requires root privileges on Linux agent host.</li>
+                  <li>Root/system device erase is blocked unless compliance override is enabled.</li>
+                  <li>Secure deletion is irreversible. Test with non-critical files first.</li>
                 </ul>
               </div>
             </div>
@@ -384,95 +481,36 @@ const LinuxSolution = () => {
 
           {/* Right Side - Downloads */}
           <div className="space-y-6">
-            {/* Linux Agent Download */}
+            {/* Universal Agent Download */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center">
-                <span className="mr-2">🐧</span>
-                Linux Agent
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center mb-2">
-                      <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-5 h-5 mr-2" />
-                      <h3 className="text-lg font-medium text-gray-900">DataWipe Linux Agent</h3>
-                    </div>
-                    <p className="text-sm text-gray-600">Compatible with Ubuntu, CentOS, RHEL, Debian</p>
-                    <p className="text-xs text-gray-500 mt-1">Version 1.0.0 (Coming Soon) • Size: ~45MB</p>
-                    </div>
-                    <button
-                    onClick={handleDownloadAgent}
-                    className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center"
-                  >
-                    <img src="https://cdn.freebiesupply.com/logos/large/2x/linux-tux-2-logo-png-transparent.png" alt="Linux" className="w-4 h-4 mr-2" />
-                    Download Agent
-                  </button>
-                  </div>
-                </div>
-
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">RHEL/CentOS Package</h3>
-                      <p className="text-sm text-gray-600">Compatible with RHEL 7+, CentOS 7+</p>
-                      <p className="text-xs text-gray-500 mt-1">Version 1.0.0 (Coming Soon) • Size: ~25MB</p>
-                    </div>
-                    <button
-                      onClick={handleDownloadAgent}
-                      className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-200 flex items-center"
-                    >
-                      <span className="mr-2">📥</span>
-                      Download .rpm
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bootable ISO Download */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center">
-                <span className="mr-2">💿</span>
-                Bootable ISO
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+                Agent Download
               </h2>
               
               <div className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">DataWipe Bootable ISO</h3>
-                    <p className="text-sm text-gray-600">Linux-based standalone environment</p>
-                    <p className="text-xs text-gray-500 mt-1">Size: ~500MB (Coming Soon)</p>
+                    <h3 className="text-lg font-medium text-gray-900">DataWipe Universal Agent</h3>
+                    <p className="text-sm text-gray-600">Compatible with Linux and Windows</p>
+                    <p className="text-xs text-gray-500 mt-1">Single zip bundle with OS-aware execution checks.</p>
                   </div>
                   <button
-                    onClick={handleDownloadISO}
-                    className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition duration-200 flex items-center"
+                    onClick={handleDownloadAgent}
+                    className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition duration-200"
                   >
-                    <span className="mr-2">📥</span>
-                    Download ISO
+                    Download Agent
                   </button>
                 </div>
               </div>
-              
-              <div className="mt-4 text-sm text-gray-600">
-                <p><strong>ISO Usage:</strong></p>
-                <ol className="list-decimal list-inside mt-2 space-y-1">
-                  <li>Create bootable USB: <code className="bg-gray-100 px-1 rounded">dd if=datawipe.iso of=/dev/sdX</code></li>
-                  <li>Boot from USB drive</li>
-                  <li>Select drive/partition to wipe</li>
-                  <li>Choose deletion method and confirm</li>
-                </ol>
-              </div>
             </div>
+
           </div>
         </div>
         )}
 
         {activeTab === 'methods' && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center">
-            <span className="mr-2">🔒</span>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
             Available Deletion Methods
           </h2>
           

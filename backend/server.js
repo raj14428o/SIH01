@@ -14,12 +14,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5175";
+const allowedOrigins = new Set(
+  [FRONTEND_URL, "http://localhost:5173", "http://localhost:5174"].filter(Boolean)
+);
 
 // --- Middleware ---
 
 // CORS Configuration
 const corsOptions = {
-  origin: FRONTEND_URL, // Whitelist your frontend's origin
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   methods: "GET,PUT,PATCH,POST,DELETE", // Allowed HTTP methods
   credentials: true, // Allow cookies and authorization headers
 };

@@ -28,9 +28,8 @@ const Navbar = ({ user }) => {
   };
 
   const navItems = [
-    { name: "Home", path: "/dashboard", icon: "🏠" },
-    { name: "Cleanup History", path: "/history", icon: "📄" },
-    { name: "Wipe Certificates", path: "/certificates", icon: "🔐" },
+    { name: "Home", path: "/dashboard" },
+    { name: "Cleanup History", path: "/history" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -58,7 +57,6 @@ const Navbar = ({ user }) => {
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 }`}
               >
-                <span className="mr-2">{item.icon}</span>
                 {item.name}
               </Link>
             ))}
@@ -66,7 +64,6 @@ const Navbar = ({ user }) => {
             {/* Solutions Dropdown */}
             <div className="relative group">
               <button className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition duration-200">
-                <span className="mr-2">🔧</span>
                 Solutions
                 <svg
                   className="ml-1 w-4 h-4"
@@ -111,7 +108,6 @@ const Navbar = ({ user }) => {
             {/* Downloads Dropdown */}
             <div className="relative group">
               <button className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition duration-200">
-                <span className="mr-2">📥</span>
                 Downloads
                 <svg
                   className="ml-1 w-4 h-4"
@@ -214,7 +210,6 @@ const Navbar = ({ user }) => {
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <span className="mr-2">{item.icon}</span>
                   {item.name}
                 </Link>
               ))}
@@ -271,7 +266,6 @@ const Navbar = ({ user }) => {
                 onClick={handleLogout}
                 className="w-full text-left flex items-center px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
               >
-                <span className="mr-2">🚪</span>
                 Logout
               </button>
             </div>
